@@ -1,41 +1,56 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {useState} from "react";
+import {observer} from 'mobx-react-lite'
+import {makeAutoObservable} from "mobx";
 
-export default function App() {
+class Counter {
+    count = 0
 
-    const [count, setCount] = useState(0);
-    const onPress: (isAddition: Boolean) => void = (isAddition: Boolean) => {
+    private FONT_SIZE_INITIAL = 10
+
+    constructor() {
+        makeAutoObservable(this)
+    }
+
+    onPress(isAddition: Boolean) {
         let beAdded = isAddition ? 1 : -1
-        setCount(prevCount => prevCount + beAdded)
-    };
+        this.count += beAdded
+    }
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.countContainer}>
-                <Text>Count: {count}</Text>
-            </View>
-            <View style={styles.countersContainer}>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                        onPress(true)
-                    }}
-                >
-                    <Text>+</Text>
-                </TouchableOpacity>
+    fontSize() {
+        return Math.floor(Math.abs(this.count) / 5) + this.FONT_SIZE_INITIAL
+    }
+}
 
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => {
-                        onPress(false)
-                    }}
-                >
-                    <Text>-</Text>
-                </TouchableOpacity>
-            </View>
+const counter = new Counter()
+
+const App = observer(() => (
+    <View style={styles.container}>
+        <View style={styles.countContainer}>
+            <Text style={{fontSize: counter.fontSize()}}>Count: {counter.count}</Text>
         </View>
-    );
-};
+        <View style={styles.countersContainer}>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                    counter.onPress(true)
+                }}
+            >
+                <Text>+</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => {
+                    counter.onPress(false)
+                }}
+            >
+                <Text>-</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+))
+
+export default App
 
 const styles = StyleSheet.create({
     container: {
@@ -50,7 +65,7 @@ const styles = StyleSheet.create({
     },
     countContainer: {
         alignItems: "center",
-        padding: 16
+        padding: 16,
     },
     countersContainer: {
         flexDirection: "row",
