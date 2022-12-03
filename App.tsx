@@ -6,13 +6,15 @@ import {NavigationContainer} from '@react-navigation/native';
 import {Colors} from "react-native/Libraries/NewAppScreen";
 import {AntDesign} from '@expo/vector-icons';
 import {Checkbox} from 'react-native-paper';
+import {observer} from "mobx-react-lite";
+import TodoStore, {Todo} from "./TodoStore";
 
 const Stack = createNativeStackNavigator();
-let todosRepo: Todo[] = []
 
 // very dirty, need data layer with repos e.t.c
 
-export default function App() {
+
+const App = () => {
 
     return (
         <NavigationContainer>
@@ -64,50 +66,31 @@ export default function App() {
     );
 }
 
-function TaskListScreen(
+export default App
+
+const TaskListScreen = observer((
     {navigation}: { navigation: any }
-) {
-    const [todos, setTodos] = useState([...todosRepo]);
+) => {
     const [text, setText] = useState('');
     const addTodo = () => {
-        let newTodos = [...todos];
-        let todo = new Todo(text, false)
-        newTodos.push(todo);
-        todosRepo.push(todo)
-
-        setTodos(newTodos);
+        TodoStore.addTodo(text);
         setText('');
     };
     const checkTodo = (todo: Todo) => {
-        let newTodos = todos.map(value => {
-            if (value.title == todo.title) {
-                return new Todo(
-                    value.title,
-                    !value.isDone
-                )
-            } else {
-                return value
-            }
-        })
-        todosRepo = newTodos
-        setTodos(newTodos)
+        TodoStore.checkTodo(todo)
     }
 
     const deleteTodo = (todo: Todo) => {
-        let newTodos = todos.filter(value => {
-            return (value.title != todo.title)
-        })
-        todosRepo = newTodos
-        setTodos(newTodos)
+        TodoStore.deleteTodo(todo)
     }
 
     const keyExtractor = (index: number) => {
         return index.toString();
     };
-    const [toggleCheckBox, setToggleCheckBox] = useState(false)
+
     return <View style={styles.container}>
         <FlatList
-            data={todos}
+            data={TodoStore.todos}
             keyExtractor={(item, index) => keyExtractor(index)}
             renderItem={({item}) => TodoComponent(
                 item,
@@ -134,17 +117,8 @@ function TaskListScreen(
             onPress={() => addTodo()}></Button>
         <StatusBar style="auto"/>
     </View>
-}
+})
 
-class Todo {
-    title: string
-    isDone: boolean
-
-    constructor(title: string, isDone: boolean) {
-        this.title = title
-        this.isDone = isDone
-    }
-}
 
 const TodoComponent = (
     item: Todo,
@@ -154,7 +128,9 @@ const TodoComponent = (
 ) => {
 
     return <TouchableOpacity
-        onPress={() => {onClick(item)}}
+        onPress={() => {
+            onClick(item)
+        }}
         style={styles.todoLineTouch}
     >
         <View style={styles.todoLine}>
@@ -183,7 +159,7 @@ const TodoComponent = (
 }
 
 // @ts-ignore
-function TaskDetailsScreen({route, navigation}) {
+const TaskDetailsScreen = ({route, navigation}) => {
     const {item} = route.params
     return <View style={styles.containerDetails}>
         <Text>
@@ -192,19 +168,24 @@ function TaskDetailsScreen({route, navigation}) {
     </View>
 }
 
-function CompletedTasksScreen({navigation}: { navigation: any }) {
+const CompletedTasksScreen = ({navigation}: { navigation: any }) => {
     const keyExtractor = (index: number) => {
         return index.toString();
     };
     return <View style={styles.container}>
         <FlatList
-            data={todosRepo.filter(value => {return value.isDone})}
+            data={TodoStore.todos.filter(value => {
+                return value.isDone
+            })}
             keyExtractor={(item, index) => keyExtractor(index)}
             renderItem={({item}) => TodoComponent(
                 item,
-                (todoItem) => {},
-                (todoItem) => {},
-                (todoItem) => {},
+                (todoItem) => {
+                },
+                (todoItem) => {
+                },
+                (todoItem) => {
+                },
             )}
         />
     </View>
